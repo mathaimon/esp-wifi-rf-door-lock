@@ -8,6 +8,7 @@
 RCSwitch mySwitch = RCSwitch();
 bool switchRelayFlag = false;
 unsigned long recievedRfKey = 0;
+unsigned long lastMqttReconnect = 0;
 
 WiFiClient ESPClient;
 PubSubClient client(ESPClient);
@@ -52,11 +53,16 @@ void loop() {
     mySwitch.resetAvailable();
   }
 
-  if (!client.connected()) {
-    MQTT_Reconnect();
+  if (!client.connected() && WiFi.status() == WL_CONNECTED) {
+    if (millis() - lastMqttReconnect > 5000) {
+      lastMqttReconnect = millis();
+      if (MQTT_Reconnect()) {
+        lastMqttReconnect = 0;
+      }
+    }
+  } else {
+    client.loop();
   }
-
-  client.loop();
 
   // Control the relay with appropriate flag
   controlRealy();
@@ -87,22 +93,20 @@ void controlRealy() {
   }
 }
 
-void MQTT_Reconnect() {
-  while (!client.connected()) {
-    Serial.print("[MQTT] Attempting MQTT connection...");
-    String clientId = "ESP32Client-";  // Random Client Id
-    clientId += String(random(0xffff), HEX);
+bool MQTT_Reconnect() {
+  Serial.print("[MQTT] Attempting MQTT connection...");
+  String clientId = "ESP32Client-";  // Random Client Id
+  clientId += String(random(0xffff), HEX);
 
-    if (client.connect(clientId.c_str())) {
-      Serial.println("connected");
-
-      client.subscribe(MQTT_Subscription_Topic);
-    } else {
-      Serial.print("[MQTT] failed, rc=");
-      Serial.print(client.state());
-      delay(1000);
-    }
+  if (client.connect(clientId.c_str())) {
+    Serial.println("connected");
+    // Set Subscriptions
+    client.subscribe(MQTT_Subscription_Topic);
+  } else {
+    Serial.print("[MQTT] failed, rc=");
+    Serial.println(client.state());
   }
+  return client.connected();
 }
 
 void MQTT_Subscription_Callback(char* topic, byte* payload,
