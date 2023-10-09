@@ -8,6 +8,7 @@
 RCSwitch mySwitch = RCSwitch();
 bool switchRelayFlag = false;
 unsigned long recievedRfKey = 0;
+unsigned long lastWifiReconnect = 0;
 unsigned long lastMqttReconnect = 0;
 
 WiFiClient ESPClient;
@@ -18,22 +19,14 @@ void setup() {
   mySwitch.enableReceive(RfInterruptPin);
   pinMode(relayPin, OUTPUT);
   digitalWrite(relayPin, LOW);
+  Serial.println("\n[System] Starting Wireless Door Lock");
 
   // Initialize WiFi
   WiFi.mode(WIFI_STA);
   WiFi.begin(wifi_ssid, wifi_password);
   if (!WiFi.config(device_local_IP, device_gateway, device_subnet,
                    device_primaryDNS, device_secondaryDNS)) {
-    Serial.println("STA Failed to configure");
-  }
-  if (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("WiFi Failed");
-    while (1) {
-      delay(1000);
-    }
-  } else {
-    Serial.print("ESP IP Address : ");
-    Serial.println(WiFi.localIP());
+    Serial.println("[WiFi] STA Failed to configure");
   }
 
   // Initialize MQTT
@@ -52,6 +45,8 @@ void loop() {
     }
     mySwitch.resetAvailable();
   }
+  // Check if wifi is live and reconnect
+  checkAndReconnectWifi();
 
   if (!client.connected() && WiFi.status() == WL_CONNECTED) {
     if (millis() - lastMqttReconnect > 5000) {
@@ -90,6 +85,22 @@ void controlRealy() {
     switchRelayFlag = false;
   } else {
     digitalWrite(relayPin, LOW);
+  }
+}
+
+void checkAndReconnectWifi() {
+  if ((WiFi.status() != WL_CONNECTED) &&
+      (millis() - lastWifiReconnect > wifiReconnectInterval)) {
+    Serial.println("[WiFi] Attempting Reconnect");
+    WiFi.disconnect();
+    WiFi.reconnect();
+    lastWifiReconnect = millis();
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.print("[WiFi] Connected to WiFi. Dev IP : ");
+      Serial.println(WiFi.localIP());
+    } else {
+      Serial.println("[WiFi] Failed to connect WiFi");
+    }
   }
 }
 
