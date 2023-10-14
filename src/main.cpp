@@ -49,7 +49,7 @@ void loop() {
   checkAndReconnectWifi();
 
   if (!client.connected() && WiFi.status() == WL_CONNECTED) {
-    if (millis() - lastMqttReconnect > 5000) {
+    if (millis() - lastMqttReconnect > mqttReconnectDelay) {
       lastMqttReconnect = millis();
       if (MQTT_Reconnect()) {
         lastMqttReconnect = 0;
