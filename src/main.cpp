@@ -10,6 +10,7 @@ bool switchRelayFlag = false;
 unsigned long recievedRfKey = 0;
 unsigned long lastWifiReconnect = 0;
 unsigned long lastMqttReconnect = 0;
+String lastUnlockBy = "none";
 
 WiFiClient ESPClient;
 PubSubClient client(ESPClient);
@@ -35,12 +36,14 @@ void setup() {
 }
 
 void loop() {
+  // Authenticate and unlock using RF
   if (mySwitch.available()) {
     recievedRfKey = mySwitch.getReceivedValue();
     Serial.print("[RF] Recieved RF Key : ");
     Serial.println(recievedRfKey);
 
     if (isAuthorizedRF(recievedRfKey)) {
+      lastUnlockBy = "rf";
       switchRelayFlag = true;
     }
     mySwitch.resetAvailable();
@@ -76,12 +79,28 @@ bool isAuthorizedRF(unsigned long keyIdDecimal) {
 
 void controlRealy() {
   if (switchRelayFlag) {
+    char buffer[256];
+    DynamicJsonDocument docPub(1024);
+    docPub["status"] = "unlocked";
+
+    // Add the last unlocked by status
+    if (lastUnlockBy == "rf") {
+      // Add the rf key id to the message
+      String _lastUnlockByString = "RF [" + recievedRfKey;
+      _lastUnlockByString += "]";
+      docPub["actionBy"] = _lastUnlockByString;
+    } else if (lastUnlockBy == "mqtt") {
+      docPub["actionBy"] = "MQTT";
+    }
+
     Serial.println("[Relay] Switching On Relay");
-    client.publish(MQTT_Publish_Topic, "open");
     digitalWrite(relayPin, HIGH);
     delay(relayOnDelay);
     Serial.println("[Relay] Switching Off Relay");
-    client.publish(MQTT_Publish_Topic, "close");
+    // Followed the instructions from this example
+    // https://arduinojson.org/v6/how-to/use-arduinojson-with-pubsubclient/
+    size_t n = serializeJson(docPub, buffer);
+    client.publish(MQTT_Publish_Topic, buffer, n);
     switchRelayFlag = false;
   } else {
     digitalWrite(relayPin, LOW);
@@ -134,6 +153,7 @@ void MQTT_Subscription_Callback(char* topic, byte* payload,
   deserializeJson(docSub, payload);
   const char* command = docSub["cmd"];
   if (strcmp(command, "open") == 0) {
+    lastUnlockBy = "mqtt";
     switchRelayFlag = true;
   }
 }
