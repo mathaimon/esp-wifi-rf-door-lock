@@ -56,6 +56,9 @@ void setup() {
     request->send(200, "text/plain", response);
   });
 
+  server.on("/restart", HTTP_GET,
+            [](AsyncWebServerRequest* request) { ESP.restart(); });
+
   ElegantOTA.begin(&server);  // Start ElegantOTA
   ElegantOTA.setAuth(ota_username, ota_password);
   // ElegantOTA callbacks
