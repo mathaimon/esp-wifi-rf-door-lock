@@ -118,7 +118,8 @@ void controlRealy() {
     // Add the last unlocked by status
     if (lastUnlockBy == "rf") {
       // Add the rf key id to the message
-      String _lastUnlockByString = "RF [" + recievedRfKey;
+      String _lastUnlockByString = "RF [";
+      _lastUnlockByString += recievedRfKey;
       _lastUnlockByString += "]";
       docPub["actionBy"] = _lastUnlockByString;
     } else if (lastUnlockBy == "mqtt") {
