@@ -16,6 +16,7 @@ unsigned long lastWifiReconnect = 0;
 unsigned long lastMqttReconnect = 0;
 String lastUnlockBy = "none";
 unsigned long ota_progress_millis = 0;
+bool show_ip = true;
 
 WiFiClient ESPClient;
 PubSubClient client(ESPClient);
@@ -144,12 +145,17 @@ void checkAndReconnectWifi() {
     WiFi.disconnect();
     WiFi.reconnect();
     lastWifiReconnect = millis();
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.print("[WiFi] Connected to WiFi. Dev IP : ");
-      Serial.println(WiFi.localIP());
-    } else {
+    if (WiFi.status() != WL_CONNECTED) {
       Serial.println("[WiFi] Failed to connect WiFi");
+      show_ip = true;
     }
+  }
+  // Show the local IP of device
+  // show_ip flag to show IP only Once
+  if (WiFi.status() == WL_CONNECTED && show_ip) {
+    Serial.print("[WiFi] Connected to WiFi. Dev IP : ");
+    Serial.println(WiFi.localIP());
+    show_ip = false;
   }
 }
 
