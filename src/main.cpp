@@ -57,6 +57,7 @@ void setup() {
   });
 
   ElegantOTA.begin(&server);  // Start ElegantOTA
+  ElegantOTA.setAuth(ota_username, ota_password);
   // ElegantOTA callbacks
   ElegantOTA.onStart(onOTAStart);
   ElegantOTA.onProgress(onOTAProgress);
