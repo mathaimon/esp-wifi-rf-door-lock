@@ -1,5 +1,9 @@
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <ESPmDNS.h>
+#include <ElegantOTA.h>
 #include <PubSubClient.h>
 #include <RCSwitch.h>
 #include <WiFi.h>
@@ -11,9 +15,11 @@ unsigned long recievedRfKey = 0;
 unsigned long lastWifiReconnect = 0;
 unsigned long lastMqttReconnect = 0;
 String lastUnlockBy = "none";
+unsigned long ota_progress_millis = 0;
 
 WiFiClient ESPClient;
 PubSubClient client(ESPClient);
+AsyncWebServer server(80);
 
 void setup() {
   Serial.begin(115200);
@@ -30,9 +36,33 @@ void setup() {
     Serial.println("[WiFi] STA Failed to configure");
   }
 
+  // Setup MDNS
+  if (!MDNS.begin(devName)) {
+    Serial.println("[MDNS]Error setting up MDNS responder!");
+    while (1) {
+      delay(500);
+    }
+  }
+
   // Initialize MQTT
   client.setServer(MQTT_Server, MQTT_Port);
   client.setCallback(MQTT_Subscription_Callback);
+
+  // Setup Web Server
+  // Send the device name as notifier
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
+    String response = "You have reached Dev : " + String(devName);
+    request->send(200, "text/plain", response);
+  });
+
+  ElegantOTA.begin(&server);  // Start ElegantOTA
+  // ElegantOTA callbacks
+  ElegantOTA.onStart(onOTAStart);
+  ElegantOTA.onProgress(onOTAProgress);
+  ElegantOTA.onEnd(onOTAEnd);
+
+  server.begin();
+  Serial.println("[WebServer] Http server started");
 }
 
 void loop() {
@@ -156,4 +186,30 @@ void MQTT_Subscription_Callback(char* topic, byte* payload,
     lastUnlockBy = "mqtt";
     switchRelayFlag = true;
   }
+}
+
+// OTA Callback Functions
+void onOTAStart() {
+  // Log when OTA has started
+  Serial.println("[OTA] Update started!");
+  // <Add your own code here>
+}
+
+void onOTAProgress(size_t current, size_t final) {
+  // Log every 1 second
+  if (millis() - ota_progress_millis > 1000) {
+    ota_progress_millis = millis();
+    Serial.printf("[OTA] Progress Current: %u bytes, Final: %u bytes\n",
+                  current, final);
+  }
+}
+
+void onOTAEnd(bool success) {
+  // Log when OTA has finished
+  if (success) {
+    Serial.println("[OTA] update finished successfully!");
+  } else {
+    Serial.println("[OTA] There was an error during OTA update!");
+  }
+  // <Add your own code here>
 }
