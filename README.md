@@ -23,5 +23,5 @@ MQTT Server on a Raspberry Pi following [this tutorial](https://www.youtube.com/
 git clone https://github.com/mathaimon/esp-wifi-rf-door-lock.git
 ```
 - Rename the ``src/config.example.h`` file to ``src/config.h``
-- Edit the ``config.h`` file to add your own WiFi and MQTT Credentials
+- Edit the ``config.h`` file to add your own WiFi, MQTT and OTA Credentials
 - Flash the file to ESP.

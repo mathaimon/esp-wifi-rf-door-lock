@@ -18,6 +18,13 @@ unsigned long authorizedRFKeys[] = {1111111, 1111111};  // add your own keys
 int numAuthorizedRFKeys =
     sizeof(authorizedRFKeys) / sizeof(authorizedRFKeys[0]);
 
+// Device Name for MDNS
+const char* devName = "main-gate";
+
+// OTA Credentials
+const char* ota_username = "<username>";
+const char* ota_password = "<password>";
+
 // WiFi Credentials
 const char* wifi_ssid = "<Your SSID>";
 const char* wifi_password = "<Your Password>";
@@ -34,8 +41,8 @@ IPAddress device_secondaryDNS(1, 0, 0, 1);
 const char* MQTT_Server = "192.168.68.254";
 const int MQTT_Port = 1883;  // default mqtt port
 
-const char* MQTT_Subscription_Topic = "/main_gate/cmd";
-const char* MQTT_Publish_Topic = "/main_gate/status";
+const char* MQTT_Subscription_Topic = "/maingate/cmd";
+const char* MQTT_Publish_Topic = "/maingate/status";
 
 // Initialize Functions    *******************************
 
@@ -52,5 +59,10 @@ void checkAndReconnectWifi();
 bool MQTT_Reconnect();
 void MQTT_Subscription_Callback(char* topic, byte* payload,
                                 unsigned int length);
+
+// OTA Callback Functions
+void onOTAStart();
+void onOTAProgress(size_t current, size_t final);
+void onOTAEnd(bool success);
 
 #endif
