@@ -24,4 +24,5 @@ git clone https://github.com/mathaimon/esp-wifi-rf-door-lock.git
 ```
 - Rename the ``src/config.example.h`` file to ``src/config.h``
 - Edit the ``config.h`` file to add your own WiFi, MQTT and OTA Credentials
+- Set the ``#define ELEGANTOTA_USE_ASYNC_WEBSERVER`` to ``1`` to use AsynWebserver
 - Flash the file to ESP.
