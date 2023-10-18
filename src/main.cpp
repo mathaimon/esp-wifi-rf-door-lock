@@ -136,7 +136,7 @@ void controlRealy() {
     // Followed the instructions from this example
     // https://arduinojson.org/v6/how-to/use-arduinojson-with-pubsubclient/
     size_t n = serializeJson(docPub, buffer);
-    client.publish(MQTT_Publish_Topic, buffer, n);
+    client.publish(MQTT_Publish_Topic, buffer, false);
     switchRelayFlag = false;
   } else {
     digitalWrite(relayPin, LOW);
