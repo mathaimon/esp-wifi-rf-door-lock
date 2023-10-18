@@ -30,6 +30,7 @@ void setup() {
   Serial.println("\n[System] Starting Wireless Door Lock");
 
   // Initialize WiFi
+  WiFi.setHostname(devName);
   WiFi.mode(WIFI_STA);
   WiFi.begin(wifi_ssid, wifi_password);
   if (!WiFi.config(device_local_IP, device_gateway, device_subnet,
