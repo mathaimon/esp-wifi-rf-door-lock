@@ -220,6 +220,7 @@ void onOTAEnd(bool success) {
   // Log when OTA has finished
   if (success) {
     Serial.println("[OTA] update finished successfully!");
+    ESP.restart();
   } else {
     Serial.println("[OTA] There was an error during OTA update!");
   }
