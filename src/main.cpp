@@ -57,8 +57,10 @@ void setup() {
     request->send(200, "text/plain", response);
   });
 
-  server.on("/restart", HTTP_GET,
-            [](AsyncWebServerRequest* request) { ESP.restart(); });
+  server.on("/restart", HTTP_GET, [](AsyncWebServerRequest* request) {
+    request->send(200, "text/plain", "Restarting device");
+    ESP.restart();
+  });
 
   ElegantOTA.begin(&server);  // Start ElegantOTA
   ElegantOTA.setAuth(ota_username, ota_password);
@@ -82,7 +84,7 @@ void loop() {
       lastUnlockBy = "rf";
       switchRelayFlag = true;
     }
-    delay(1000);
+    delay(700);
     mySwitch.resetAvailable();
   }
   // Check if wifi is live and reconnect
