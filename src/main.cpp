@@ -84,7 +84,7 @@ void loop() {
       lastUnlockBy = "rf";
       switchRelayFlag = true;
     }
-    delay(700);
+    delay(300);
     mySwitch.resetAvailable();
   }
   // Check if wifi is live and reconnect
